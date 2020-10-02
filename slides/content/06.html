@@ -1,0 +1,13 @@
+<h2>How to fit Go into Py</h2>
+
+- we're not talking about a python/Go FFI interface or anything like that
+- not talking about automated transcoding/conversions either
+    for example, https://github.com/google/grumpy
+- we're talking about writing new code or replacing some python code with Go code
+    something like "manual transcoding"
+
+
+possible things you can do right now, with no code changes:
+
+- sidecars - capture your logs or statistics if you're building a webapp
+- backend "layers" - for example a proxy for your database or a proxy in front of your web app

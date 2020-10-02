@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>How to Safely and Efficiently Build your App with Modules</title>
+
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/simple.css" id="theme">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/monokai.css">
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section data-external="content/01.html"></section>
+				<section data-external="content/02.html"></section>
+				<section data-external="content/03.html"></section>
+				<section data-external="content/04.html"></section>
+				<section data-external="content/05.html"></section>"
+				<section data-external="content/06.html"></section>
+
+				<section>
+					<h1>
+						Modules & Your App
+					</h1>
+					
+					<p>GoWayFest, 12 July, 2020</p>
+					<p>
+						<a href="https://twitter.com/arschles">
+							@arschles
+						</a>
+					</p>
+					<aside class="notes">
+						https://goway.io/#talk_Aaron_Schlesinger
+					</aside>
+				</section>
+
+				<section>
+					<h2>Evolution of Dependencies</h2>
+					
+					<p class="fragment"><code>nil</code></p>
+					<p class="fragment"><code>go get</code></p>
+					<p class="fragment"><code>GO15VENDOREXPERIMENT</code></p>
+					<p class="fragment"><code>glide</code>, <code>dep</code>, ...</p>
+					<p class="fragment">
+						<mark><code>
+							go get
+						</code></mark>
+					</p>
+				</section>
+
+				<section>
+					<h1>Aaron Schlesinger</h1>
+					<p>
+						Core maintainer & Creator, 
+						<a href="https://docs.gomods.io">Athens</a>
+					</p>
+					<p>
+						Sr. Cloud Developer Advocate, Microsoft
+					</p>
+					<p>
+						<a href="https://twitter.com/arschles">@arschles</a>
+					</p>
+					<aside class="notes">
+						We're going talk today about what modules are
+						doing for you "under the hood" and how/when to
+						use it
+					</aside>
+				</section>
+
+				<section>
+					<h2>
+						Everything uses <code>go</code>
+					</h2>
+					<p class="fragment">
+						It has a <mark>deceivingly</mark> similar workflow ...
+					</p>
+					<p class="fragment">
+						... and it's the <mark>standard</mark> since v1.9.
+					</p>
+				</section>
+				
+				<section>
+					<h2>Behind the scenes</h2>
+					<h3 class="fragment">
+						<code>proxy.golang.org</code>
+					</h3>
+					<p class="fragment">
+						<small>
+							(No VCS downloads. Custom HTTP API)
+						</small>
+					</p>
+					<h3 class="fragment">
+						<code>
+							sum.golang.org
+						</code>
+					</h3>
+					<p class="fragment">
+						<small>
+							(Global checksum database)
+						</small>
+					</p>
+
+					<aside class="notes">
+						<p>
+							All code comes from HTTP servers by default, so
+							we have a brand new abstraction for the VCS
+							origin. That gives us more reliable & faster
+							builds.
+						</p>
+						<p>
+							Also, all code is authenticated with a
+							globally hosted (by the Go team) checksum
+							database. That means that when you run
+							<code>go get</code> on a new module version,
+							you'll be sure that the code at that
+							version hasn't been changed since it was first
+							seen in the community.
+						</p>
+					</aside>
+				</section>
+
+				<section>
+					<h2>Layers to preparedness</h2>
+					<p class="fragment">
+						Tracking & securing dependencies
+					</p>
+					<p class="fragment">
+						Where code comes from
+					</p>
+					<p class="fragment">
+						Where it's stored
+					</p>
+					<p class="fragment">
+						Handling private code
+					</p>
+					<aside class="notes">
+						Specifically, a new abstraction brings new
+						requirements.
+					</aside>
+				</section>
+
+				<section>
+					<h2>A basic build <small>(demo)</small></h2>
+					<sub>
+						Your project with public dependencies
+					</sub>
+
+					<aside class="notes">
+						Demo - see <code>basic-public/</code>
+
+						<ul>
+							<li>
+								Introduce <code>go.mod</code>
+								and <code>go.sum</code>
+							</li>
+							<li>
+								Clear cache
+							</li>
+							<li>
+								Show <code>GOPROXY</code>
+							</li>
+							<li>
+								Build the app
+							</li>
+						</ul>
+					</aside>
+				</section>
+
+				<section>
+					<h2>
+						Shared <code>vendor</code> folder
+					</h2>
+					<aside class="notes">
+						<p>
+							We centralized the vendor directory to a
+							server in the cloud.
+						</p>
+
+						<p>
+							In that demo, it's hosted by Google, but
+							there are other hosts.
+						</p>
+
+						<p>
+							Centralization is nice for our dependencies
+							because we can:
+							<ul>
+								<li>Control</li>
+								<li>Audit</li>
+								<li>Secure</li>
+							</ul>
+							Our dependencies in one place.
+						</p>
+					</aside>
+				</section>
+
+				<section>
+					<h2>Private Code?</h2>
+				</section>
+
+				<section>
+					<h3>
+						<p>
+							<code>go</code> <u>defaults</u> 
+							to using the public servers.
+						</p>
+					</h3>
+					<aside class="notes">
+						<p>
+							Public hosted servers don't hold
+							your private code.
+						</p>
+
+						<p>
+							... but it's easy (unfortunately) to ask
+							the hosted servers for your private code
+						</p>
+
+						<p>
+							... which tells them about the names of
+							your private modules
+						</p>
+
+						<p>
+							You have to remember to turn that off
+						</p>
+					</aside>
+				</section>
+
+				<section>
+					<h2>
+						Your private code <small>(demo)</small>
+					</h2>
+					<sub>
+						Code being fetched from multiple
+						sources.
+					</sub>
+				</section>
+
+				<section>
+					<h2>Own Your Storage</h2>
+					<p class="fragment">
+						Insulate against changes
+					</p>
+					<p class="fragment">
+						All dependencies onsite (firewall)
+					</p>
+					<p class="fragment">
+						Auditability
+					</p>
+					<aside class="notes">
+						<p>
+							The best solution is to put a proxy
+							between you and the public cloud.
+						</p>
+
+						<p>
+							You get the same benefits and also
+							control what gets fetched from upstream.
+						</p>
+
+						<p>
+							We're going to use Athens for our 
+							private server because it's the only 100%
+							open source proxy implementation.
+						</p>
+						
+						<p>
+							You can run it yourself, and we have a
+							great community if you run into issues.
+						</p>
+					</aside>
+				</section>
+
+				<section>
+					<h2>Using a private server <small>(demo)</small></h2>
+					<sub>
+						All code in a private database
+					</sub>
+				</section>
+
+				<section>
+					<h1>Things to remember</h1>
+				</section>
+
+				
+				<section>
+					<p>
+						Shared Vendor Folder
+					</p>
+					<p>
+						Fast, dependable builds
+					</p>
+					<p>
+						Increased security
+					</p>
+					<p>
+						...
+					</p>
+
+					</h2>
+				</section>
+
+				<section>
+					<h2>
+						You must override defaults
+					</h2>
+					<h2>
+						for private repositories.
+					</h2>
+					<aside class="notes">
+						<p>
+							The defaults are optimized
+							for speed, reliability, and security
+							for completely <u>public</u> codebases
+						</p>
+					</aside>
+				</section>
+
+				<section>
+					<h2>
+						Run your own server
+					</h2>
+					<h2>
+						for larger teams.
+					</h2>
+					<aside class="notes">
+						<p>
+							If you have more than a few developers,
+							set up your own server (Athens, Artifactory)
+						</p>
+						<p>
+							Make sure you turn on the private sum DB 
+							proxy
+						</p>
+						<p>
+							Make sure everyone has their
+							<code>GOPROXY</code> pointed to it
+						</p>
+					</aside>
+				</section>
+
+				<section>
+					<h2>
+						More Reading
+					</h2>
+					<p>
+						<code>go help module-private</code>
+					</p>
+					<p class="fragment">
+						<a
+							href="https://github.com/golang/go/wiki/Modules">
+							github.com/golang/go/wiki/Modules
+						</a>
+					</p>
+				</section>
+				<section>
+					<p>
+						Slides: 
+						<a href="https://cda.ms/1mh">
+							cda.ms/1mh
+						</a>
+					</p>
+					<p>
+						Athens: 
+						<a href="https://docs.gomods.io">
+							docs.gomods.io
+						</a>
+					</p>
+					<p><code>@arschles</code></p>
+				</section>
+			</div>
+		</div>
+
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				center: true,
+				hash: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true },
+					{ src: 'plugin/search/search.js', async: true },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/external/external.js', condition: function() {
+						return !!document.querySelector( '[data-external]' );
+						}
+					},
+				]
+			});
+
+		</script>
+	</body>
+</html>

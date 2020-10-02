@@ -1,0 +1,12 @@
+<h2>Where does go fit into Python?</h2>
+
+- long running tasks that get kicked off by an incoming event (i.e. HTTP request)
+- long running background jobs like "sidecars" (i.e. log aggregator)
+- "tier 2" backend services like caches, etc...
+- places where you are forking your process to get more concurrency
+    i.e. the multiprocess module
+- when you're using fibers
+    goroutines might make sense
+- anywhere you hit the Global Interpreter Lock
+- anywhere you need to run on >1 core
+- you have to ship your app somewhere else (no need to also ship an interpreter)
