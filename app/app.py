@@ -2,16 +2,25 @@ from flask import Flask, render_template, jsonify, request
 import pickle
 import requests
 import uuid
+import datetime
+from io import BytesIO
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return jsonify({
-        "images": [],
-        "num_images": 0,
-        "last_uploaded": "",
-    })
+    try:
+        with open("pickled_db.db", "r") as dbFile:
+            unpickled = pickle.load(dbFile)
+            return jsonify({
+                "num_images": unpickled["num_images"],
+                "last_uploaded": unpickled["last_uploaded"],
+            })
+    except:
+        return jsonify({
+            "num_images": 0,
+            "last_uploaded": "never"
+        })
 @app.route("/stats")
 def stats():
     return jsonify({
@@ -28,12 +37,11 @@ def size_histogram():
 def tags():
     return jsonify({})
     
-@app.route("/upload", methods=["POST"])
+@app.route("/upload", methods = ['POST'])
 def upload():
 
     """
     TODO: call out to the Go backend to:
-    download image from URL
     compress
     index & tag
     return continuation token
@@ -50,18 +58,33 @@ def upload():
     image_tags = json["tags"] # needs to be a list of strings
     image_name = json["name"] # needs to be a string
 
-    image_binary = requests.get(image_url)
+    image_binary = requests.get(image_url).content
+    image_size = len(image_binary)
+
+    # TODO: we cannot do a compress operation concurrently because
+    # Python doesn't support multicore operations
+    #
+    # We would have to use multiprocessing to do it, but it would be nicer
+    # to not need to fork a new process each time we get a new request, 
+    # because that's pretty heavyweight
 
     with open("pickled_db.db", "w+") as dbFile:
         filename = "{}-{}".format(image_name, str(uuid.uuid4()))
-        with open(filename, "w") as imageFile:
+        with open(filename, "wb") as imageFile:
             imageFile.write(image_binary)
 
         unpickled = pickle.load(dbFile)
+
+        # NOTE: this 'if' would not be necessary with Go because Go has types
         if not isinstance(unpickled["images"], list):
             unpickled["images"] = []
         
-        unpickled.push({
+        unpickled["last_uploaded"] = datetime.datetime.now(datetime.timezone.utc)
+        unpickled["num_images"] = unpickled["num_images"] + 1
+        unpickled["total_size"] = unpickled["total_size"] + image_size
+        unpickled["avg_size"] = unpickled["total_size"] / unpickled["num_images"]
+
+        unpickled["images"].push({
             str(uuid.uuid4()): {
                 "name": image_name,
                 "tags": image_tags,

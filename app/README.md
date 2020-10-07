@@ -1,20 +1,21 @@
-# {{cookiecutter.app_name}}
+# Test Python App
 
-## Quick Start
+You need Python 3 to run this.
 
-Install Cookiecutter globally:
+Get the environment set up:
 
-```sh
-$ pip install cookiecutter
+```shell
+source ./start-env.sh
 ```
 
-Generate the boilerplate:
+Start the server:
 
-```sh
-$ cookiecutter https://github.com/testdrivenio/cookiecutter-flask-skeleton.git
+```shell
+flask
 ```
 
-Review the set up guides to configure the app:
+Upload an image:
 
-1. [setup-with-docker.md](setup-with-docker.md)
-1. [setup-without-docker.md](setup-without-docker.md)
+```shell
+curl -X POST -H "Content-Type: application/json" -d '{"url": "https://http.cat/404", "name": "cat404", ["cat", "notfound"]}' http://localhost:5000
+```
