@@ -74,6 +74,11 @@ def upload():
     # We would have to use multiprocessing to do it, but it would be nicer
     # to not need to fork a new process each time we get a new request, 
     # because that's pretty heavyweight
+    
+
+    # FOR LIVE CODING:
+    # rip out all of this low level DB etc... code
+    # and replace it with a call to the Go backend server
 
     unpickled = None
     with open("pickled_db.db", "rb") as dbFile:
