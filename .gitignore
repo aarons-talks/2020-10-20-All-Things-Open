@@ -127,4 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-app/pickled_db.db
+app/pickle_db.db
+app/*.image
