@@ -1,5 +1,60 @@
 # 2020-10-20-All-Things-Open
+
 My slides and code for All Things Open 2020
+
+There are two main apps in this repository:
+
+- A frontend Python app that serves up a limited REST API and HTML templates
+- A backend Go app that does the expensive tasks like downloading and compressing images
+
+# Testing the Python App
+
+The Python app has two "entrypoint" files - `app.py` and `app.backup.py`. `app.py` does all of the work itself - downloading the image, saving it, indexing it in the database, and so on. It does not do any compression because that is very computationally expensive to do
+
+`app.backup.py` relies on the Go backend (which is in [backend](./backend)) to do the compression work.
+
+## The All In One App
+
+To run the "all in one" app, follow the below instructions
+
+First, go into the directory with the app in it:
+
+```shell
+cd frontend
+```
+
+Then, set up the Python virtual environment:
+
+```shell
+source ./start-env.sh
+```
+
+Start the app with:
+
+```shell
+flask run
+```
+
+Now, you can upload an image:
+
+```shell
+curl -XPOST -H "Content-Type: application/json" -d '{"url": "https://http.cat/404", "tags": ["not", "found"], "name":"httpcat"}' localhost:5000/upload
+```
+
+And then test that it worked properly:
+
+```shell
+curl localhost:5000
+```
+
+You should see something like this:
+
+```json
+{
+  "last_uploaded": "Thu, 15 Oct 2020 22:10:19 GMT",
+  "num_images": 1
+}
+```
 
 
 # Python v. Go Notes

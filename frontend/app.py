@@ -6,6 +6,7 @@ import datetime
 from io import BytesIO
 
 PICKLE_DB_FILENAME = "pickled_db.db"
+open(PICKLE_DB_FILENAME, 'w+')
 
 # TODO: maybe put this into an app factory:
 # https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/
@@ -122,5 +123,4 @@ def upload():
 if __name__ == "__main__":
     # create the pickle DB file so that we can read it later,
     # without having to check if it already exists
-    open(PICKLE_DB_FILENAME, 'w+')
     app.run(debug=True)
