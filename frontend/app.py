@@ -26,22 +26,16 @@ def home():
             "num_images": 0,
             "last_uploaded": "never"
         })
-@app.route("/stats")
-def stats():
-    return jsonify({
-        "avg_size": 0,
-        "avg_compressed_size": 0,
-        "num_tags": 0,
-    })
 
-@app.route("/size_histogram")
-def size_histogram():
-    return jsonify({})
+@app.route("/image/<image_name>")
+def view_image(image_name):
+    """
+    TODO: implement this
+    <html>
+    <body>
+    <img src="goserver.com/image/<image_name>">
+    """
 
-@app.route("/tags")
-def tags():
-    return jsonify({})
-    
 @app.route("/upload", methods = ['POST'])
 def upload():
 
@@ -78,12 +72,18 @@ def upload():
 
     # FOR LIVE CODING:
     # rip out all of this low level DB etc... code
-    # and replace it with a call to the Go backend server
+    # and replace it with an HTTP call to the Go backend server
 
     unpickled = None
     with open("pickled_db.db", "rb") as dbFile:
         filename = "{}-{}.image".format(image_name, str(uuid.uuid4()))
         with open(filename, "wb") as imageFile:
+            # We are not gonna do compression here because
+            # it might take up a while and block _every_ other request
+            # that is coming in. There is a way around that
+            # using the multiprocessing module, but that in turn
+            # is heavyweight because we need to spawn a new process
+            # for every single request
             imageFile.write(image_binary)
 
         # instantiate the unpickled data if the file

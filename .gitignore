@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 app/pickle_db.db
 app/*.image
+/backend-server
