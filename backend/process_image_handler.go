@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
-	"github.com/boltdb/bolt"
 	"github.com/google/uuid"
 	echo "github.com/labstack/echo/v4"
+	bolt "go.etcd.io/bbolt"
 )
 
 func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
@@ -20,10 +21,11 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 		Name string   `json:"name"`
 	}
 	return func(c echo.Context) error {
-		r := &req{}
+		r := new(req)
 		if err := c.Bind(r); err != nil {
 			return err
 		}
+		log.Printf("Image Payload: %+v", *r)
 		// start up the goroutine so we can continue doing
 		// the compression work in the background but immediately
 		// return to the Python client
@@ -34,14 +36,19 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 		// endpoint that you could use to check progress of the processing
 		go func() {
 
+			log.Printf(
+				"Starting processor goroutine for image %s at url %s",
+				r.Name,
+				r.URL,
+			)
 			// Go's DB support lets us wrap our entire HTTP handler
 			// inside of a transaction. This is similar to a SQLIte
 			// transaction if you're using Python
-			db.Update(func(tx *bolt.Tx) error {
+			updateErr := db.Update(func(tx *bolt.Tx) error {
 				// first, check if the image name exists. that would
 				// be indicated if the bucket for that image
 				// currently exists
-				imgFilename := fmt.Sprintf("%s-%s", r.Name, uuid.New())
+				imgFilename := fmt.Sprintf("%s-%s.image", r.Name, uuid.New())
 				imageBucketName := []byte(imgFilename)
 
 				if tx.Bucket(imageBucketName) != nil {
@@ -49,7 +56,7 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 				}
 
 				// next, download and store the image to a file
-				imgFile, err := os.OpenFile(imgFilename, os.O_WRONLY, 0755)
+				imgFile, err := os.Create(fmt.Sprintf("./imagefiles/%s", imgFilename))
 				if err != nil {
 					return err
 				}
@@ -122,37 +129,47 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 					return err
 				}
 
-				imageMetadata := map[string]interface{}{
-					"size":     imageSize,
+				imageMetadata := map[string]string{
 					"name":     r.Name,
-					"tags":     r.Tags,
 					"filename": imgFilename,
 					"url":      r.URL,
 				}
 				for k, v := range imageMetadata {
-					valBytes, err := json.Marshal(v)
-					if err != nil {
-						return err
-					}
+					valBytes := []byte(v)
 					imageBucket.Put([]byte(k), valBytes)
 				}
 
-				nameLookupBucket, err := tx.CreateBucketIfNotExists([]byte(
-					imageLookupBucketName,
-				))
+				imageSizeStr := fmt.Sprintf("%d", imageSize)
+				imageBucket.Put([]byte("size"), []byte(imageSizeStr))
+
+				// now, store the tags:
+				tagsJSON, err := json.Marshal(r.Tags)
 				if err != nil {
 					return err
 				}
+				imageBucket.Put([]byte("tags"), tagsJSON)
+
+				nameLookupBucket := tx.Bucket([]byte(
+					imageLookupBucketName,
+				))
 
 				if err := nameLookupBucket.Put([]byte(r.Name), []byte(
 					imageBucketName,
 				)); err != nil {
 					return err
 				}
+				log.Printf(
+					"Finished processing for image %s at %s",
+					r.Name,
+					r.URL,
+				)
 
 				return nil
 
 			})
+			if updateErr != nil {
+				log.Printf("Error with DB update: %s", updateErr)
+			}
 		}()
 		return nil
 	}

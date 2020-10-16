@@ -26,7 +26,7 @@ def view_image(image_name):
     img_data = requests.get("{}/image/{}".format(BACKEND_HOST, image_name)).json()
     return render_template(
         "/image.html",
-        img_src=img_data["src"],
+        img_src="http://localhost:5001{}".format(img_data["src"]),
         img_alt=img_data["alt"]
     )
 
@@ -41,9 +41,9 @@ def upload():
         return "Invalid JSON", 400
     
     payload = {
-        "url": url,
-        "tags": tags,
-        "name": name,
+        "url": json["url"],
+        "tags": json["tags"],
+        "name": json["name"],
     }
 
     # this is where we return the 201 CREATED response because the

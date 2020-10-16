@@ -130,5 +130,8 @@ dmypy.json
 frontend/pickle_db.db
 frontend/pickled_db.db
 frontend/*.image
+backend/*.image
+backend/imagefiles/*.image
 /backend-server
 backend/images.db
+backend/imagebackend

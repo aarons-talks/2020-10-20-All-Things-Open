@@ -1,3 +1,3 @@
-module github.com/arschles/atotalk
+module github.com/arschles/imagebackend
 
 go 1.15
