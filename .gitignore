@@ -135,3 +135,4 @@ backend/imagefiles/*.image
 /backend-server
 backend/images.db
 backend/imagebackend
+frontend/static/*.image

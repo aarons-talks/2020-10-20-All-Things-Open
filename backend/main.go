@@ -41,7 +41,8 @@ func main() {
 	// that_KCA says I should use DetectContentType from net/http
 	//
 	// could put that into a middleware and all is gravy
-	e.Static("/serve_image", "./imagefiles")
+	e.GET("/serve_image/:image", newServeImageHandler())
+	// e.Static("/serve_image", "imagefiles")
 
 	e.Logger.Fatal(e.Start(":5001"))
 }

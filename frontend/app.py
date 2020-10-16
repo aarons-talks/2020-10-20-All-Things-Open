@@ -6,7 +6,8 @@ import datetime
 from io import BytesIO
 
 PICKLE_DB_FILENAME = "pickled_db.db"
-open(PICKLE_DB_FILENAME, 'w+')
+with open(PICKLE_DB_FILENAME, 'w+') as f:
+    pass
 
 # TODO: maybe put this into an app factory:
 # https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/
@@ -28,14 +29,40 @@ def home():
             "last_uploaded": "never"
         })
 
+@app.route("/images")
+def images():
+    with open(PICKLE_DB_FILENAME, "rb") as dbFile:
+        unpickled = pickle.load(dbFile)
+        img_names = []
+        for _, image_dict in unpickled["images"].items():
+            img_names.append(image_dict["name"])
+        return render_template("images.html", img_names = img_names)
+
 @app.route("/image/<image_name>")
 def view_image(image_name):
-    """
-    TODO: implement this
-    <html>
-    <body>
-    <img src="goserver.com/image/<image_name>">
-    """
+    print("image name: {}".format(image_name))
+    print("a-1")
+    with open(PICKLE_DB_FILENAME, "rb") as dbFile:
+        print("a0")
+        unpickled = pickle.load(dbFile)
+        print("a")
+        filename = None
+        print("a2")
+        for _, image_dict in unpickled["images"].items():
+            print(image_dict)
+            if image_dict["name"] == image_name:
+                filename = image_dict["filename"]
+                break
+        
+        if filename is None:
+            return "No such image", 404
+        
+        print("a3")
+        return render_template(
+            "image.html",
+            img_src=filename,
+            img_alt=image_name,
+        )
 
 @app.route("/upload", methods = ['POST'])
 def upload():
@@ -63,22 +90,17 @@ def upload():
     image_binary = requests.get(image_url).content
     image_size = len(image_binary)
 
-    # TODO: we cannot do a compress operation concurrently because
-    # Python doesn't support multicore operations
-    #
-    # We would have to use multiprocessing to do it, but it would be nicer
-    # to not need to fork a new process each time we get a new request, 
-    # because that's pretty heavyweight
-    
-
-    # FOR LIVE CODING:
-    # rip out all of this low level DB etc... code
-    # and replace it with an HTTP call to the Go backend server
+    # TODO: we are not doing a compress operation here because
+    # # it would take forever.
+    # 
+    # We would need to do it in the background, but that isn't really
+    # possible because Python does not support true parallelism
+    # because of the GIL.
 
     unpickled = None
     with open("pickled_db.db", "rb") as dbFile:
         filename = "{}-{}.image".format(image_name, str(uuid.uuid4()))
-        with open(filename, "wb") as imageFile:
+        with open("static/{}".format(filename), "wb") as imageFile:
             # We are not gonna do compression here because
             # it might take up a while and block _every_ other request
             # that is coming in. There is a way around that
@@ -93,7 +115,7 @@ def upload():
             unpickled = pickle.load(dbFile)
         except:
             unpickled = {
-                "images": [],
+                "images": {},
                 "num_images": 0,
                 "total_size": 0,
             }
@@ -103,14 +125,12 @@ def upload():
         unpickled["total_size"] = unpickled["total_size"] + image_size
         unpickled["avg_size"] = unpickled["total_size"] / unpickled["num_images"]
 
-        unpickled["images"].append({
-            str(uuid.uuid4()): {
-                "name": image_name,
-                "tags": image_tags,
-                "url": image_url,
-                "file_location": "./{}".format(filename)
-            }
-        })
+        unpickled["images"][str(uuid.uuid4())] = {
+            "name": image_name,
+            "tags": image_tags,
+            "url": image_url,
+            "filename": filename,
+        }
     
     with open(PICKLE_DB_FILENAME, "wb") as f:
         pickle.dump(unpickled, f)
