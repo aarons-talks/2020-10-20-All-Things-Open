@@ -36,6 +36,11 @@ func main() {
 	e.POST("/process_image", newProcessHandler(db))
 
 	e.GET("/image/:image", newImageHandler(db))
+
+	// TODO: need to make sure that I serve the right content type.
+	// that_KCA says I should use DetectContentType from net/http
+	//
+	// could put that into a middleware and all is gravy
 	e.Static("/serve_image", "./imagefiles")
 
 	e.Logger.Fatal(e.Start(":5001"))
