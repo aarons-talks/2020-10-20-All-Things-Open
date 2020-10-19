@@ -21,6 +21,7 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 		Name string   `json:"name"`
 	}
 	return func(c echo.Context) error {
+		log.Printf("process handler")
 		r := new(req)
 		if err := c.Bind(r); err != nil {
 			return err

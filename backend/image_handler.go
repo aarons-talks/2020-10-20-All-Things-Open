@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	echo "github.com/labstack/echo/v4"
@@ -12,6 +13,7 @@ func newImageHandler(db *bolt.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		imageName := c.Param("image")
 		if imageName == "" {
+			log.Printf("No image name given")
 			return c.JSON(
 				400,
 				fmt.Sprintf("No name given"),
@@ -25,12 +27,14 @@ func newImageHandler(db *bolt.DB) echo.HandlerFunc {
 				imageLookupBucketName,
 			))
 			if nameLookupBucket == nil {
+				log.Printf("Name lookup bucket not found")
 				return fmt.Errorf("Image %s not found", imageName)
 			}
 			imageBucketName = nameLookupBucket.Get([]byte(imageName))
 			return nil
 		})
 		if err != nil {
+			log.Printf("Error looking up image (%s)", err)
 			return c.JSON(
 				404,
 				fmt.Sprintf("Image %s not found (%s)", imageName, err),
@@ -43,11 +47,13 @@ func newImageHandler(db *bolt.DB) echo.HandlerFunc {
 		err = db.View(func(tx *bolt.Tx) error {
 			imageBucket := tx.Bucket(imageBucketName)
 			if imageBucket == nil {
+				log.Printf("Image bucket not found")
 				return fmt.Errorf("Image %s not found", imageName)
 			}
 
 			filename = imageBucket.Get([]byte("filename"))
 			if filename == nil {
+				log.Printf("Image file not found")
 				return fmt.Errorf("Filename was not available in the image bucket")
 			}
 			return nil
