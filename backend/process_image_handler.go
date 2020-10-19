@@ -60,6 +60,7 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 				if err != nil {
 					return err
 				}
+				defer imgFile.Close()
 
 				// Go lets us specify a different HTTP client for specific
 				// cases. In this case, the default one is fine, but
@@ -102,6 +103,7 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 				// more of the low-level features of the underlying operating system
 				// in order to optimize the performance of your program
 				gzipWriter := gzip.NewWriter(imgFile)
+				defer gzipWriter.Close()
 
 				// here's we're streaming data from the response body
 				// (which may be streaming directly from the server)

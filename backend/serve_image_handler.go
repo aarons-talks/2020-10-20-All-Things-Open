@@ -32,11 +32,17 @@ func newServeImageHandler() echo.HandlerFunc {
 			log.Printf("ERROR with gzip decompressing: %s", err)
 			return err
 		}
+		defer gzReader.Close()
 		_, err = io.Copy(responseWriter, gzReader)
-		// if err != nil {
-		// 	log.Printf("Error copying image down to the response: %s", err)
-		// 	return err
-		// }
+		if err != nil {
+			log.Printf(
+				"Error copying image (filename: %s) down to the response: %s",
+				fileFullyQualified,
+				err,
+			)
+
+			return err
+		}
 		return nil
 	}
 }
