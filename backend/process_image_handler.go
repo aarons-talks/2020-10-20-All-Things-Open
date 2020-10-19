@@ -25,7 +25,6 @@ func newProcessHandler(db *bolt.DB) echo.HandlerFunc {
 		if err := c.Bind(r); err != nil {
 			return err
 		}
-		log.Printf("Image Payload: %+v", *r)
 		// start up the goroutine so we can continue doing
 		// the compression work in the background but immediately
 		// return to the Python client

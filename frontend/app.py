@@ -40,16 +40,10 @@ def images():
 
 @app.route("/image/<image_name>")
 def view_image(image_name):
-    print("image name: {}".format(image_name))
-    print("a-1")
     with open(PICKLE_DB_FILENAME, "rb") as dbFile:
-        print("a0")
         unpickled = pickle.load(dbFile)
-        print("a")
         filename = None
-        print("a2")
         for _, image_dict in unpickled["images"].items():
-            print(image_dict)
             if image_dict["name"] == image_name:
                 filename = image_dict["filename"]
                 break
@@ -57,7 +51,6 @@ def view_image(image_name):
         if filename is None:
             return "No such image", 404
         
-        print("a3")
         return render_template(
             "image.html",
             img_src=filename,
@@ -69,19 +62,16 @@ def upload():
 
     """
     TODO: call out to the Go backend to:
-    compress
-    index & tag
-    return continuation token
-    
-    Also TODO: need to figure out the communication between this app and the Go app
+    download the image
+    compress it
+    write to a file
+    save the database
     """
 
     json = request.get_json()
     if not json:
         return "No JSON found", 400
     
-    print("In the upload function")
-
     # TODO: make sure these are the right data types
     image_url = json["url"] # needs to be a string
     image_tags = json["tags"] # needs to be a list of strings
@@ -91,7 +81,7 @@ def upload():
     image_size = len(image_binary)
 
     # TODO: we are not doing a compress operation here because
-    # # it would take forever.
+    # it would take forever.
     # 
     # We would need to do it in the background, but that isn't really
     # possible because Python does not support true parallelism
