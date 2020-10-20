@@ -26,7 +26,7 @@ def view_image(image_name):
     img_data = requests.get("{}/image/{}".format(BACKEND_HOST, image_name)).json()
     return render_template(
         "/image_backend.html",
-        img_src="http://localhost:5001{}".format(img_data["src"]),
+        img_src=img_data["src"],
         img_alt=img_data["alt"]
     )
 
