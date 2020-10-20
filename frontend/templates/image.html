@@ -2,7 +2,7 @@
     <head></head>
     <body>
         <img
-            src="{{ img_src }}"
+            src="{{ url_for('static', filename=img_src) }}"
             alt="{{ img_alt }}" />
     </body>
 </html>
